@@ -1,0 +1,110 @@
+$home_path = ""
+
+def get_total_time(tracks)
+  time = 0
+  tracks.each do | t |
+    time += t.total_time
+  end
+  time
+end
+
+def get_different_artists(tracks)
+  artist_list = []
+  tracks.each do | t |
+    if artist_list.include? t.artist
+      next
+    end
+    artist_list += [t.artist]
+  end
+  artist_list.length
+end
+
+def get_different_albums(tracks)
+  album_list = []
+  tracks.each do | t |
+    if album_list.include? t.album
+      next
+    end
+    album_list += [t.album]
+  end
+  album_list.length
+end
+
+def get_listens(tracks_list, track)
+  listens = 0
+  tracks_list.each do | t |
+    if t.name == track.name
+      listens += 1
+    end
+  end
+  listens
+end
+
+def listening_hours(dates, cache)
+  parsed_cache = JSON.parse(cache)
+  hours = parsed_cache["listening_hours"]
+  if dates.nil? or dates.length == 0
+    return hours
+  end
+  dates.split("\n").each do |d|
+      hour_tmp = d.split(" ")[1]
+      if hours.keys.include? hour_tmp.split(":")[0]
+        hours[hour_tmp.split(":")[0]] += 1
+        next
+      end
+      hours[hour_tmp.split(":")[0]] = 1
+    end
+  hours
+end
+
+def get_artists_listen(tracks)
+  artists = {}
+  tracks.each do |t|
+    if artists.keys.include? t.artist
+      artists[t.artist] += t.listens
+      next
+    end
+    artists[t.artist] = t.listens
+  end
+  artists
+end
+
+def get_albums_listen(tracks)
+  albums = {}
+  tracks.each do |t|
+    k = t.artist + " - " + t.album
+    if albums.keys.include? k
+      albums[k] += t.listens
+      next
+    end
+    albums[k] = t.listens
+  end
+  albums
+end
+
+def get_tracks_listen(tracks)
+  listens = {}
+  tracks.each do |t|
+    k = t.artist + " - " + t.name
+    listens[k] = t.listens
+  end
+  listens
+end
+
+def compute_stats(tracks)
+  {
+    "listening_time" => get_total_time(tracks),
+    "different_tracks" => tracks.length,
+    "tracks_listen" => get_tracks_listen(tracks),
+    "different_artists" => get_different_artists(tracks),
+    "artists_listens" => get_artists_listen(tracks),
+    "different_albums" => get_different_albums(tracks),
+    "albums_listens" => get_albums_listen(tracks),
+    "listening_hours" => listening_hours(File.read($home_path + "dates.txt"), File.read($home_path + "stats.json"))
+  }
+end
+
+def write_stats(tracks)
+  stats = compute_stats tracks
+  File.write($home_path + "stats.json", JSON.pretty_generate(stats))
+end
