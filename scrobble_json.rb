@@ -112,8 +112,8 @@ def main_stats
   File.write($home_path + "dates.txt", "")
   dates_file = File.open($home_path + "dates.txt", "a")
   dates = get_dates(JSON.parse(json_file))
-  dates_file.write("\n")
   dates_file.write(dates.join("\n"))
+  dates_file.write("\n")
   dates_file.close
   parsed_json = unpack_json(JSON.parse(json_file))
   begin

@@ -1,4 +1,5 @@
 $home_path = ""
+require 'json'
 
 def get_total_time(tracks)
   time = 0
@@ -47,14 +48,25 @@ def listening_hours(dates, cache)
     return hours
   end
   dates.split("\n").each do |d|
-      hour_tmp = d.split(" ")[1]
-      if hours.keys.include? hour_tmp.split(":")[0]
-        hours[hour_tmp.split(":")[0]] += 1
+    if d.nil?
+      next
+    end
+    hour_tmp = d.split(" ")[1]
+    if hours.keys.include? hour_tmp.split(":")[0]
+      hours[hour_tmp.split(":")[0]] += 1
+      next
+    end
+    hours[hour_tmp.split(":")[0]] = 1
+  end
+  if hours.keys.length != 25
+    (0..24).each do |h|
+      if hours.keys.include? h.to_s
         next
       end
-      hours[hour_tmp.split(":")[0]] = 1
+      hours[h.to_s] = 0
     end
-  hours
+  end
+  hours.sort{|x, y| x[0].to_i <=> y[0].to_i}.to_h
 end
 
 def get_artists_listen(tracks)
