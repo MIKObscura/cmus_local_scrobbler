@@ -16,6 +16,6 @@ All the tracks that were ever played as well as the amount of time they were pla
 * track.rb: definition of the Track class, used by scrobble_stats.rb to make updating and computing stats easier
 
 # How to run?
-One thing you should do before you run is set the directory where the different json/txt files are saved, you can do this by changing the $home\_directory global in scrobble_stats.rb.  
+One thing you should do before you run is set the directory where the different json/txt files are saved, you can do this by changing the $home\_directory global in scrobble_stats.rb. You can optionally leave it as is, in which case it will be saved in the current directory.  
 Then, once that's done, simply execute this command
 > ruby path/to/file/main.rb
