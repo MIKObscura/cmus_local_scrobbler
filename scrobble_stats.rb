@@ -103,15 +103,42 @@ def get_tracks_listen(tracks)
   listens
 end
 
+def get_artists_listen_time(tracks)
+  listen_time = {}
+  tracks.each do |t|
+    if listen_time.keys.include? t.artist
+      listen_time[t.artist] += t.listens * t.duration
+      next
+    end
+    listen_time[t.artist] = t.listens * t.duration
+  end
+  listen_time
+end
+
+def get_albums_listen_time(tracks)
+  listen_time = {}
+  tracks.each do |t|
+    k = t.artist + " - " + t.album
+    if listen_time.keys.include? k
+      listen_time[k] += t.listens * t.duration
+      next
+    end
+    listen_time[k] = t.listens * t.duration
+  end
+  listen_time
+end
+
 def compute_stats(tracks)
   {
     "listening_time" => get_total_time(tracks),
     "different_tracks" => tracks.length,
-    "tracks_listen" => get_tracks_listen(tracks),
+    "tracks_listens" => get_tracks_listen(tracks),
     "different_artists" => get_different_artists(tracks),
     "artists_listens" => get_artists_listen(tracks),
+    "artists_time" => get_artists_listen_time(tracks),
     "different_albums" => get_different_albums(tracks),
     "albums_listens" => get_albums_listen(tracks),
+    "albums_time" => get_albums_listen_time(tracks),
     "listening_hours" => listening_hours(File.read($home_path + "dates.txt"), File.read($home_path + "stats.json"))
   }
 end
