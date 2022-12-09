@@ -3,23 +3,25 @@ require 'time'
 require_relative 'scrobble_json.rb'
 include Errno
 
+#returns the cmus status
 def get_cmus_status
   status = `cmus-remote -C status`
   status_lines = []
-  if status == "cmus-remote: read: Connection reset by peer"
+  if status == "cmus-remote: read: Connection reset by peer" #value of the status when cmus is stopped
     return status
   end
-  status.each_line do |line|
+  status.each_line do |line| #turn it into an array to make reading it easier
     status_lines += [line]
   end
   status_lines
 end
 
+#turns the status into a hash
 def parse_cmus_status(status)
   today = Time.now.strftime("%Y-%m-%d %H:%M:%S")
   result_hash = {
     today => {
-    "albumartist" => "",
+    "albumartist" => "", #all of the elements that we're interested in
     "album" => "",
     "title" => "",
     "duration" => 0,
@@ -32,7 +34,7 @@ def parse_cmus_status(status)
     if keys.include? s_elems[1]
       result_hash[today][s_elems[1]] = s_elems[2..s_elems.length].join(" ")
     end
-    if s_elems[0] == "duration"
+    if s_elems[0] == "duration" #most of the lines in the status start with tag or set but these ones don't
       result_hash[today]["duration"] = s_elems[1].to_i
     end
     if s_elems[0] == "position"
@@ -42,13 +44,14 @@ def parse_cmus_status(status)
   result_hash
 end
 
+#dumps the hash into the current session's json
 def write_to_json(json)
   begin
     file = File.read($home_path + "scrobble_data.json")
   rescue Errno::ENOENT
     file = File.open($home_path + "scrobble_data.json", "w+").read
   end
-  json_array = JSON.parse(file)
+  json_array = JSON.parse(file) #adding directly into the json file doesn't work so you have to parse then add then re-generate
   json_array << json
   File.write($home_path + "scrobble_data.json", JSON.pretty_generate(json_array))
 end
@@ -57,26 +60,27 @@ def main
   clear_data($home_path + "scrobble_data.json")
   processes = `ps -a`
   previous_song = nil
-  while processes.include? "cmus"
+  while processes.include? "cmus" #automatically ends when cmus isn't running
     status = get_cmus_status
-    if status == "cmus-remote: read: Connection reset by peer"
+    if status == "cmus-remote: read: Connection reset by peer" #in case it catches the status before cmus stops (doesn't happen most of the time)
       break
     end
     json_status = parse_cmus_status status
-    if json_status[json_status.keys[0]]["album"].nil?
+    if json_status[json_status.keys[0]]["album"].nil? #avoids adding empty json into the file, there isn't a particular
+      # reason why this key was used, it works with any other
       next
     end
-    if previous_song.nil?
+    if previous_song.nil? #sets the previous song to compare for the next iteration
       json_check = true
     else
       json_check = !(json_status[json_status.keys[0]]["artist"] == previous_song[previous_song.keys[0]]["artist"] and json_status[json_status.keys[0]]["title"] == previous_song[previous_song.keys[0]]["title"])
     end
-    if json_check and json_status[json_status.keys[0]]["position"] > (json_status[json_status.keys[0]]["duration"] / 2)
+    if json_check and json_status[json_status.keys[0]]["position"] > (json_status[json_status.keys[0]]["duration"] / 2) #only add into the json if you reached half of the song
       previous_song = json_status
       json_status[json_status.keys[0]].delete("position")
       write_to_json json_status
     end
-    sleep(10)
+    sleep(10) #wait 10s, no point in checking all the time
     processes = `ps -a`
   end
   main_stats

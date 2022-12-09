@@ -1,6 +1,7 @@
 $home_path = ""
 require 'json'
 
+#adds the total time of all the tracks
 def get_total_time(tracks)
   time = 0
   tracks.each do | t |
@@ -9,6 +10,7 @@ def get_total_time(tracks)
   time
 end
 
+#returns all the different artists registered
 def get_different_artists(tracks)
   artist_list = []
   tracks.each do | t |
@@ -20,6 +22,7 @@ def get_different_artists(tracks)
   artist_list.length
 end
 
+#returns all the different albums registered
 def get_different_albums(tracks)
   album_list = []
   tracks.each do | t |
@@ -31,16 +34,7 @@ def get_different_albums(tracks)
   album_list.length
 end
 
-def get_listens(tracks_list, track)
-  listens = 0
-  tracks_list.each do | t |
-    if t.name == track.name
-      listens += 1
-    end
-  end
-  listens
-end
-
+#parses the dates.txt file and updates the listening hours
 def listening_hours(dates, cache)
   parsed_cache = JSON.parse(cache)
   hours = parsed_cache["listening_hours"]
@@ -52,13 +46,14 @@ def listening_hours(dates, cache)
       next
     end
     hour_tmp = d.split(" ")[1]
-    if hours.keys.include? hour_tmp.split(":")[0].to_i.to_s
+    if hours.keys.include? hour_tmp.split(":")[0].to_i.to_s #need to turn it into an int so we don't have keys like 05 or 00
+      #but also need to turn it back to string afterwards so json doesn't throw a tantrum because the key isn't a string
       hours[hour_tmp.split(":")[0].to_i.to_s] += 1
       next
     end
     hours[hour_tmp.split(":")[0].to_i.to_s] = 1
   end
-  if hours.keys.length != 24
+  if hours.keys.length != 24 #checks if all the hours are in there, if not adds the missing one
     (0..23).each do |h|
       if hours.keys.include? h.to_s
         next
@@ -69,6 +64,7 @@ def listening_hours(dates, cache)
   hours.sort{|x, y| x[0].to_i <=> y[0].to_i}.to_h
 end
 
+#returns how many times any artist's track was listened to for every artist
 def get_artists_listen(tracks)
   artists = {}
   tracks.each do |t|
@@ -81,6 +77,7 @@ def get_artists_listen(tracks)
   artists
 end
 
+#same as above but with albums
 def get_albums_listen(tracks)
   albums = {}
   tracks.each do |t|
@@ -94,6 +91,7 @@ def get_albums_listen(tracks)
   albums
 end
 
+#same as above but with tracks
 def get_tracks_listen(tracks)
   listens = {}
   tracks.each do |t|
@@ -103,31 +101,34 @@ def get_tracks_listen(tracks)
   listens
 end
 
+#gets the amount of time in seconds an artist was listened to
 def get_artists_listen_time(tracks)
   listen_time = {}
   tracks.each do |t|
     if listen_time.keys.include? t.artist
-      listen_time[t.artist] += t.listens * t.duration
+      listen_time[t.artist] += t.total_time
       next
     end
-    listen_time[t.artist] = t.listens * t.duration
+    listen_time[t.artist] = t.total_time
   end
   listen_time
 end
 
+#same but with albums
 def get_albums_listen_time(tracks)
   listen_time = {}
   tracks.each do |t|
     k = t.artist + " - " + t.album
     if listen_time.keys.include? k
-      listen_time[k] += t.listens * t.duration
+      listen_time[k] += t.total_time
       next
     end
-    listen_time[k] = t.listens * t.duration
+    listen_time[k] = t.total_time
   end
   listen_time
 end
 
+#dumps all of the above functions into a hash
 def compute_stats(tracks)
   {
     "listening_time" => get_total_time(tracks),

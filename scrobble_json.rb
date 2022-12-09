@@ -3,6 +3,7 @@ require_relative 'scrobble_stats.rb'
 require 'json'
 include Errno
 
+#removes the dates from the original json
 def unpack_json(json)
   jsons = []
   json.each do | k |
@@ -12,15 +13,7 @@ def unpack_json(json)
   jsons
 end
 
-def get_dates_hours(json)
-  hours = []
-  json.each do | k |
-    key = k.keys[0].split(" ")
-    hours += [key[1]]
-  end
-  hours
-end
-
+#extracts the dates from the json
 def get_dates(json)
   dates = []
   json.each do | k |
@@ -29,6 +22,7 @@ def get_dates(json)
   dates
 end
 
+#generates all the Track objects from cache
 def init_tracks_from_cache
   json_cache = JSON.parse(File.read($home_path + "cache.json"))
   tracks = []
@@ -42,6 +36,7 @@ def init_tracks_from_cache
   tracks
 end
 
+#uses the previous function if there is a cache, if not uses given json
 def init_tracks(json, cache = false)
   if cache
     tracks = init_tracks_from_cache
@@ -61,11 +56,13 @@ def init_tracks(json, cache = false)
   tracks
 end
 
+#clears the current session's json
 def clear_data(json_data)
   clear = "[]"
   File.write(json_data, clear)
 end
 
+#generates cache.json file
 def create_cache(tracks)
   cache_file = File.open("cache.json", "w")
   json_str = []
@@ -82,21 +79,24 @@ def create_cache(tracks)
   cache_file.close
 end
 
+#returns a hash made from cache.json
 def get_cache
   JSON.parse(File.read($home_path + "cache.json"))
 end
 
+#finds the index of an element in the json, returns nil if not found
 def json_find(json, el)
   json.find_index { | e | e["artist"] == el["albumartist"] and e["title"] == el["title"] }
 end
 
+#adds a track to the cache
 def add_to_cache(json_cache, elems)
   cache = get_cache
   elems.each do | e |
     index = json_find(cache, e)
-    if !index.nil?
+    if !index.nil? #the index exists so we just increment the listens counter
       cache[index]["listens"] += 1
-    else
+    else #if not we add it
       e["artist"] = e["albumartist"]
       e.delete("albumartist")
       cache << e
@@ -121,5 +121,5 @@ def main_stats
   rescue Errno::ENOENT
     tracks = init_tracks(parsed_json, false)
   end
-  write_stats(tracks)
+  write_stats(tracks) #sends the tracks to the scrobble_stats script
 end
