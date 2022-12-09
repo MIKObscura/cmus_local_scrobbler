@@ -8,37 +8,17 @@ class Track
     @total_time = duration.to_i * listens.to_i
   end
 
-  def name
-    @name
-  end
+  attr_reader :name
 
-  def artist
-    @artist
-  end
+  attr_reader :artist
 
-  def album
-    @album
-  end
+  attr_reader :album
 
-  def duration
-    @duration
-  end
+  attr_reader :duration
 
-  def listens
-    @listens
-  end
+  attr_reader :total_time
 
-  def new_listens(new_listen)
-    @listens = new_listen
-  end
-
-  def more_time
-    @listens += 1
-  end
-
-  def total_time
-    @total_time
-  end
+  attr_accessor :listens
 
   def ==(other)
     @name == other.name and @album == other.album and @duration == other.album

@@ -52,7 +52,7 @@ def init_tracks(json, cache = false)
     new_track = Track.new(j["title"], j["albumartist"], j["album"], j["duration"])
     if tracks.any? { | t | t.name == new_track.name and t.artist == new_track.artist }
       index = tracks.find_index { | t | t.name == new_track.name and t.artist == new_track.artist }
-      tracks[index].more_time
+      tracks[index].listens += 1
       next
     end
     tracks += [new_track]
