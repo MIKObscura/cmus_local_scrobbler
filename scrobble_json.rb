@@ -92,10 +92,9 @@ end
 
 def add_to_cache(json_cache, elems)
   cache = get_cache
-  cache_str = JSON.generate(cache)
   elems.each do | e |
-    if cache_str.include? e["title"] and cache_str.include? e["albumartist"]
-      index = json_find(cache, e)
+    index = json_find(cache, e)
+    if !index.nil?
       cache[index]["listens"] += 1
     else
       e["artist"] = e["albumartist"]
@@ -109,7 +108,7 @@ end
 
 def main_stats
   json_file = File.read($home_path + "scrobble_data.json")
-  File.write($home_path + "dates.txt", "")
+  File.truncate($home_path + "dates.txt", 0)
   dates_file = File.open($home_path + "dates.txt", "a")
   dates = get_dates(JSON.parse(json_file))
   dates_file.write(dates.join("\n"))

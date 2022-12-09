@@ -52,14 +52,14 @@ def listening_hours(dates, cache)
       next
     end
     hour_tmp = d.split(" ")[1]
-    if hours.keys.include? hour_tmp.split(":")[0]
-      hours[hour_tmp.split(":")[0]] += 1
+    if hours.keys.include? hour_tmp.split(":")[0].to_i.to_s
+      hours[hour_tmp.split(":")[0].to_i.to_s] += 1
       next
     end
-    hours[hour_tmp.split(":")[0]] = 1
+    hours[hour_tmp.split(":")[0].to_i.to_s] = 1
   end
-  if hours.keys.length != 25
-    (0..24).each do |h|
+  if hours.keys.length != 24
+    (0..23).each do |h|
       if hours.keys.include? h.to_s
         next
       end
