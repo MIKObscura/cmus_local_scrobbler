@@ -1,5 +1,6 @@
-$home_path = ""
 require 'json'
+require 'date'
+$weekdays = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday]
 
 #adds the total time of all the tracks
 def get_total_time(tracks)
@@ -34,7 +35,16 @@ def get_different_albums(tracks)
   album_list.length
 end
 
-#parses the dates.txt file and updates the listening hours
+def get_listens(tracks_list, track)
+  listens = 0
+  tracks_list.each do | t |
+    if t.name == track.name
+      listens += 1
+    end
+  end
+  listens
+end
+
 def listening_hours(dates, cache)
   parsed_cache = JSON.parse(cache)
   hours = parsed_cache["listening_hours"]
@@ -64,7 +74,30 @@ def listening_hours(dates, cache)
   hours.sort{|x, y| x[0].to_i <=> y[0].to_i}.to_h
 end
 
-#returns how many times any artist's track was listened to for every artist
+def listening_days(dates, cache)
+  parsed_cache = JSON.parse(cache)
+  days = parsed_cache["listening_days"]
+  if dates.nil? or dates.length == 0
+    return days
+  end
+  if days.keys.length != 7
+    $weekdays.each do |w|
+      if days.keys.include? w
+        next
+      end
+      days[w] = 0
+    end
+  end
+  dates.split("\n").each do |d|
+    if d.nil?
+      next
+    end
+    day = Date.parse(d).wday
+    days[$weekdays[day]] += 1
+  end
+  days
+end
+
 def get_artists_listen(tracks)
   artists = {}
   tracks.each do |t|
@@ -140,11 +173,12 @@ def compute_stats(tracks)
     "different_albums" => get_different_albums(tracks),
     "albums_listens" => get_albums_listen(tracks),
     "albums_time" => get_albums_listen_time(tracks),
-    "listening_hours" => listening_hours(File.read($home_path + "dates.txt"), File.read($home_path + "stats.json"))
+    "listening_hours" => listening_hours(File.read($config[:home_path] + "dates.txt"), File.read($config[:home_path] + "stats.json")),
+    "listening_days" => listening_days(File.read($config[:home_path] + "dates.txt"), File.read($config[:home_path] + "stats.json"))
   }
 end
 
 def write_stats(tracks)
   stats = compute_stats tracks
-  File.write($home_path + "stats.json", JSON.pretty_generate(stats))
+  File.write($config[:home_path] + "stats.json", JSON.pretty_generate(stats))
 end

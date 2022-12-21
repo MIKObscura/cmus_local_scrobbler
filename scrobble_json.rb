@@ -13,7 +13,16 @@ def unpack_json(json)
   jsons
 end
 
-#extracts the dates from the json
+#extracts the hours from the dates
+def get_dates_hours(json)
+  hours = []
+  json.each do | k |
+    key = k.keys[0].split(" ")
+    hours += [key[1]]
+  end
+  hours
+end
+
 def get_dates(json)
   dates = []
   json.each do | k |
@@ -24,7 +33,7 @@ end
 
 #generates all the Track objects from cache
 def init_tracks_from_cache
-  json_cache = JSON.parse(File.read($home_path + "cache.json"))
+  json_cache = JSON.parse(File.read($config[:home_path] + "cache.json"))
   tracks = []
   json_cache.each do | j |
     new_track = Track.new(j["title"], j["artist"], j["album"], j["duration"], j["listens"])
@@ -81,7 +90,7 @@ end
 
 #returns a hash made from cache.json
 def get_cache
-  JSON.parse(File.read($home_path + "cache.json"))
+  JSON.parse(File.read($config[:home_path] + "cache.json"))
 end
 
 #finds the index of an element in the json, returns nil if not found
@@ -107,16 +116,16 @@ def add_to_cache(json_cache, elems)
 end
 
 def main_stats
-  json_file = File.read($home_path + "scrobble_data.json")
-  File.truncate($home_path + "dates.txt", 0)
-  dates_file = File.open($home_path + "dates.txt", "a")
+  json_file = File.read($json_filename)
+  File.truncate($config[:home_path] + "dates.txt", 0)
+  dates_file = File.open($config[:home_path] + "dates.txt", "a")
   dates = get_dates(JSON.parse(json_file))
   dates_file.write(dates.join("\n"))
   dates_file.write("\n")
   dates_file.close
   parsed_json = unpack_json(JSON.parse(json_file))
   begin
-    add_to_cache($home_path + "cache.json", parsed_json)
+    add_to_cache($config[:home_path] + "cache.json", parsed_json)
     tracks = init_tracks(parsed_json, true)
   rescue Errno::ENOENT
     tracks = init_tracks(parsed_json, false)

@@ -15,18 +15,30 @@ The program automatically stops when there is no instance of cmus running.
 * scrobble_json.rb: uses the parsed status and writes it in the json files
 * scrobble_stats.rb: makes various statistics from the cache.json and dates.txt files and dumps them in a file called stats.json (not fully implemented yet)
 * track.rb: definition of the Track class, used by scrobble_stats.rb to make updating and computing stats easier 
+* config.rb: reads the configuration file
 
 Note: I didn't include a script or something else that uses the data stored in stats.json because the point of this program is to generate the data and updating it while letting you toy around with it however you like.
 
+# Configuration
+First create a file called scrobbler_config.txt in the same directory as the ruby scripts  
+The format is key=value with one on each line  
+It will be expanded in the future but this is what it has for now:
+* home_path: sets the directory where json files are saved
+* keep_previous_sessions: does not wipe the content of scrobble_data.json and instead creates a new one every session
+* time_to_register: minimum time to register a track, if it's < 1 then it's treated as a percentage of the track (i.e. 0.5 will register the track once it's at half of its duration). If it's > 1 then it's treaded as a static amount of seconds  
+Here's an example:
+``` 
+home_path=/home/mikobscura/cmus_scrobbler/
+keep_previous_sessions=true
+time_to_register=30
+```
+
+
 # How to run?
-One thing you should do before you run is set the directory where the different json/txt files are saved, you can do this by changing the $home\_directory global in scrobble_stats.rb. You can optionally leave it as is, in which case it will be saved in the current directory.  
-Then, once that's done, simply execute this command
+Make a configuration file then simply execute this command
 > ruby path/to/file/main.rb
 
 # Known issues
 * [ ] Some data being in both cache.json and stats.json may be redundant and could use some rework to avoid that  
 * [ ] Currently, repeating is not counted unless another track is played and registered beforehand
 * [ ] Not tested yet but probably doesn't work with cmus' status_display_program
-
-# Possible Improvements
-* [ ] Adding a config file to customize various things like directory for json files, minimum time to register, stats to track,...

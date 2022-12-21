@@ -1,6 +1,7 @@
 require 'json'
 require 'time'
 require_relative 'scrobble_json.rb'
+require_relative 'config.rb'
 include Errno
 
 #returns the cmus status
@@ -34,7 +35,10 @@ def parse_cmus_status(status)
     if keys.include? s_elems[1]
       result_hash[today][s_elems[1]] = s_elems[2..s_elems.length].join(" ")
     end
-    if s_elems[0] == "duration" #most of the lines in the status start with tag or set but these ones don't
+    if s_elems[1] == "artist"
+      result_hash[today]["albumartist"] = s_elems[2..s_elems.length].join(" ")
+    end
+    if s_elems[0] == "duration"
       result_hash[today]["duration"] = s_elems[1].to_i
     end
     if s_elems[0] == "position"
@@ -47,17 +51,23 @@ end
 #dumps the hash into the current session's json
 def write_to_json(json)
   begin
-    file = File.read($home_path + "scrobble_data.json")
+    file = File.read($json_filename)
   rescue Errno::ENOENT
-    file = File.open($home_path + "scrobble_data.json", "w+").read
+    file = File.open($json_filename, "w+").read
   end
-  json_array = JSON.parse(file) #adding directly into the json file doesn't work so you have to parse then add then re-generate
+  json_array = JSON.parse(file)
   json_array << json
-  File.write($home_path + "scrobble_data.json", JSON.pretty_generate(json_array))
+  File.write($json_filename, JSON.pretty_generate(json_array))
 end
 
 def main
-  clear_data($home_path + "scrobble_data.json")
+  read_config
+  today = Time.now
+  $json_filename = $config[:home_path] + "scrobble_data.json"
+  if $config[:keep_previous_sessions]
+    $json_filename = $config[:home_path] + "scrobble_data_%d%d%d%d%d.json" % [today.day, today.month, today.year, today.hour, today.min]
+  end
+  clear_data($json_filename)
   processes = `ps -a`
   previous_song = nil
   while processes.include? "cmus" #automatically ends when cmus isn't running
@@ -75,7 +85,8 @@ def main
     else
       json_check = !(json_status[json_status.keys[0]]["artist"] == previous_song[previous_song.keys[0]]["artist"] and json_status[json_status.keys[0]]["title"] == previous_song[previous_song.keys[0]]["title"])
     end
-    if json_check and json_status[json_status.keys[0]]["position"] > (json_status[json_status.keys[0]]["duration"] / 2) #only add into the json if you reached half of the song
+    register_time = $config[:time_to_register] < 1 ? (json_status[json_status.keys[0]]["duration"] * $config[:time_to_register].to_f).to_i: $config[:time_to_register].to_i
+    if json_check and json_status[json_status.keys[0]]["position"] > register_time
       previous_song = json_status
       json_status[json_status.keys[0]].delete("position")
       write_to_json json_status
