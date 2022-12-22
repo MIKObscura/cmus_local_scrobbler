@@ -1,13 +1,13 @@
 include Errno
-$config = {}
+$config = {
+  :home_path => "",
+  :keep_previous_sessions => false,
+  :time_to_register => 0.5
+}
 
 class String
   def true?
-    if self == "true"
-      true
-    else
-      false
-    end
+    self == "true"
   end
 end
 
