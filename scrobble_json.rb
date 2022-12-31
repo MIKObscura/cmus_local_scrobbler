@@ -123,12 +123,15 @@ def main_stats
   dates_file.write(dates.join("\n"))
   dates_file.write("\n")
   dates_file.close
-  parsed_json = unpack_json(JSON.parse(json_file))
-  begin
-    add_to_cache($config[:home_path] + "cache.json", parsed_json)
-    tracks = init_tracks(parsed_json, true)
-  rescue Errno::ENOENT
-    tracks = init_tracks(parsed_json, false)
+  parsed_json = unpack_json(JSON.parse(json_file, {:symbolize_names=>true}))
+  parsed_json.each do |t|
+    if t[:artist].nil?
+      t[:artist] = t[:albumartist]
+      t.delete(:albumartist)
+    end
+    add_to_db t
   end
-  write_stats(tracks) #sends the tracks to the scrobble_stats script
+  db = SQLite3::Database.open $config[:home_path] + "scrobble.db"
+  write_stats db
+  db.close
 end

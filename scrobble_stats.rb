@@ -1,48 +1,25 @@
 require 'json'
 require 'date'
+require 'sqlite3'
 $weekdays = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday]
 
 #adds the total time of all the tracks
 def get_total_time(tracks)
-  time = 0
-  tracks.each do | t |
-    time += t.total_time
-  end
-  time
+  tracks.execute("select sum(plays*duration) from tracks")[0][0]
 end
 
 #returns all the different artists registered
 def get_different_artists(tracks)
-  artist_list = []
-  tracks.each do | t |
-    if artist_list.include? t.artist
-      next
-    end
-    artist_list += [t.artist]
-  end
-  artist_list.length
+  tracks.execute("select count(*) from artists")[0][0]
 end
 
 #returns all the different albums registered
 def get_different_albums(tracks)
-  album_list = []
-  tracks.each do | t |
-    if album_list.include? t.album
-      next
-    end
-    album_list += [t.album]
-  end
-  album_list.length
+  tracks.execute("select count(*) from albums")[0][0]
 end
 
-def get_listens(tracks_list, track)
-  listens = 0
-  tracks_list.each do | t |
-    if t.name == track.name
-      listens += 1
-    end
-  end
-  listens
+def get_different_tracks(tracks)
+  tracks.execute("select count(*) from tracks")[0][0]
 end
 
 def listening_hours(dates, cache)
@@ -99,73 +76,62 @@ def listening_days(dates, cache)
 end
 
 def get_artists_listen(tracks)
-  artists = {}
-  tracks.each do |t|
-    if artists.keys.include? t.artist
-      artists[t.artist] += t.listens
-      next
-    end
-    artists[t.artist] = t.listens
+  query = tracks.execute "select artists.name, sum(tracks.plays) as total_plays from artists join tracks on artists.id = tracks.artist group by artists.name order by total_plays desc limit 10"
+  hash = {}
+  query.each do |r|
+    hash[r[0]] = r[1]
   end
-  artists
+  hash
 end
 
 #same as above but with albums
 def get_albums_listen(tracks)
-  albums = {}
-  tracks.each do |t|
-    k = t.artist + " - " + t.album
-    if albums.keys.include? k
-      albums[k] += t.listens
-      next
-    end
-    albums[k] = t.listens
+  query = tracks.execute "select albums.title, artists.name, sum(tracks.plays) as total_plays from albums join tracks on albums.id = tracks.album join artists on tracks.artist = artists.name group by albums.title order by total_plays desc limit 10"
+  hash = {}
+  query.each do |r|
+    key = r[1] + " - " + r[0]
+    hash[key] = r[2]
   end
-  albums
+  hash
 end
 
 #same as above but with tracks
 def get_tracks_listen(tracks)
-  listens = {}
-  tracks.each do |t|
-    k = t.artist + " - " + t.name
-    listens[k] = t.listens
+  query = tracks.execute "select tracks.title, artists.name, tracks.plays from tracks join artists on tracks.artist = artists.id order by tracks.plays desc limit 10"
+  hash = {}
+  query.each do |r|
+    key = r[1] + " - " + r[0]
+    hash[key] = r[2]
   end
-  listens
+  hash
 end
 
 #gets the amount of time in seconds an artist was listened to
 def get_artists_listen_time(tracks)
-  listen_time = {}
-  tracks.each do |t|
-    if listen_time.keys.include? t.artist
-      listen_time[t.artist] += t.total_time
-      next
-    end
-    listen_time[t.artist] = t.total_time
+  query = tracks.execute "select artists.name, sum(tracks.plays*tracks.duration) as total_time from artists join tracks on artists.id = tracks.artist group by artists.name order by total_time desc limit 10"
+  hash = {}
+  query.each do |r|
+    hash[r[0]] = r[1]
   end
-  listen_time
+  hash
 end
 
 #same but with albums
 def get_albums_listen_time(tracks)
-  listen_time = {}
-  tracks.each do |t|
-    k = t.artist + " - " + t.album
-    if listen_time.keys.include? k
-      listen_time[k] += t.total_time
-      next
-    end
-    listen_time[k] = t.total_time
+  query = tracks.execute "select albums.title, artists.name, sum(tracks.plays*tracks.duration) as total_time from albums join tracks on albums.id = tracks.album join artists on artists.id = tracks.artist group by albums.title order by total_time desc limit 10"
+  hash = {}
+  query.each do |r|
+    key = r[1] + " - " + r[0]
+    hash[key] = r[2]
   end
-  listen_time
+  hash
 end
 
 #dumps all of the above functions into a hash
 def compute_stats(tracks)
   {
     "listening_time" => get_total_time(tracks),
-    "different_tracks" => tracks.length,
+    "different_tracks" => get_different_tracks(tracks),
     "tracks_listens" => get_tracks_listen(tracks),
     "different_artists" => get_different_artists(tracks),
     "artists_listens" => get_artists_listen(tracks),
