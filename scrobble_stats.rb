@@ -86,7 +86,7 @@ end
 
 #same as above but with albums
 def get_albums_listen(tracks)
-  query = tracks.execute "select albums.title, artists.name, sum(tracks.plays) as total_plays from albums join tracks on albums.id = tracks.album join artists on tracks.artist = artists.name group by albums.title order by total_plays desc limit 10"
+  query = tracks.execute "select albums.title, artists.name, sum(tracks.plays) as total_plays from albums join tracks on albums.id = tracks.album join artists on tracks.artist = artists.id group by albums.title order by total_plays desc limit 10"
   hash = {}
   query.each do |r|
     key = r[1] + " - " + r[0]
