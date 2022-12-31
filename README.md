@@ -7,14 +7,15 @@ I know lastfm exists and can be used with cmus but I wanted to do this for fun a
 # How does it work?
 Every 10 seconds it checks the cmus status with cmus-remote and parses it.  
 The data of the current session is written in scrobbler_data.json, the data contained in this file is wiped out every session.   
-All the tracks that were ever played as well as the amount of times they were played are stored in cache.json  
+All the tracks that were ever played as well as the amount of times they were played are stored in the db file.
 The program automatically stops when there is no instance of cmus running.
 
 # What does each file do?
 * main.rb: parses the cmus status and sends it to the other scripts
 * scrobble_json.rb: uses the parsed status and writes it in the json files
-* scrobble_stats.rb: makes various statistics from the cache.json and dates.txt files and dumps them in a file called stats.json (not fully implemented yet)
-* track.rb: definition of the Track class, used by scrobble_stats.rb to make updating and computing stats easier 
+* scrobble_stats.rb: makes various statistics from the database and dates.txt files and dumps them in a file called stats.json (not fully implemented yet)
+* track.rb: definition of the Track class, previously used for stats but now is unused because the database fulfills that role instead 
+* database.rb: contains a single function to add a track to the database, increments its plays counter if it's already there
 * config.rb: reads the configuration file
 
 Note: I didn't include a script or something else that uses the data stored in stats.json because the point of this program is to generate the data and updating it while letting you toy around with it however you like.
@@ -39,6 +40,5 @@ Make a configuration file then simply execute this command
 > ruby path/to/file/main.rb
 
 # Known issues
-* [ ] Some data being in both cache.json and stats.json may be redundant and could use some rework to avoid that  
 * [ ] Currently, repeating is not counted unless another track is played and registered beforehand
-* [ ] Not tested yet but probably doesn't work with cmus' status_display_program
+* [ ] Not tested yet but probably doesn't work with cmus' status_display_program [Note: the time to register can't be configured when using status_display_program so I won't implement that]
