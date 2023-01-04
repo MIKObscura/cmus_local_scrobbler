@@ -1,6 +1,8 @@
-require_relative 'track.rb'
 require_relative 'scrobble_stats.rb'
+require_relative 'config.rb'
+require_relative 'database.rb'
 require 'json'
+require 'time'
 include Errno
 
 #removes the dates from the original json
