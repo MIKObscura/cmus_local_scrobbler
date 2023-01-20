@@ -31,7 +31,7 @@ def read_config
     end
     $config[var.to_sym] = val.true?
   end
-  if $config[:time_to_register] < 0.1
+  if $config[:time_to_register] < 0.5
     $config[:time_to_register] = 0.5
   end
 end

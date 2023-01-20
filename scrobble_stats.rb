@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 require 'sqlite3'
-$weekdays = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday]
+WEEKDAYS = %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday]
 
 #adds the total time of all the tracks
 def get_total_time(tracks)
@@ -58,7 +58,7 @@ def listening_days(dates, cache)
     return days
   end
   if days.keys.length != 7
-    $weekdays.each do |w|
+    WEEKDAYS.each do |w|
       if days.keys.include? w
         next
       end
@@ -70,7 +70,7 @@ def listening_days(dates, cache)
       next
     end
     day = Date.parse(d).wday
-    days[$weekdays[day]] += 1
+    days[WEEKDAYS[day]] += 1
   end
   days
 end
@@ -127,7 +127,86 @@ def get_albums_listen_time(tracks)
   hash
 end
 
-#dumps all of the above functions into a hash
+#calculates all the weekly, monthly and yearly stats
+def period_stats(raw_data)
+  stats = {
+    :total_tracks => 0,
+    :total_artists => 0,
+    :total_albums => 0,
+    :total_time => 0,
+    :artists => {},
+    :albums => {},
+    :artists_time => {},
+    :albums_time => {},
+    :hours => {},
+    :days => {}
+  }
+  24.times do |h|
+    stats[:hours][h] = 0
+  end
+  WEEKDAYS.each do |w|
+    stats[:days][w] = 0
+  end
+  stats[:total_tracks] = raw_data.length
+  raw_data.each do |v|
+    key = v.keys[0]
+    val = v[key]
+    if stats[:artists].keys.include? val[:albumartist]
+      stats[:artists][val[:albumartist]] += 1
+      stats[:artists_time][val[:albumartist]] += val[:duration]
+    else
+      stats[:artists][val[:albumartist]] = 1
+      stats[:artists_time][val[:albumartist]] = val[:duration]
+    end
+    album_name = "#{val[:albumartist]} - #{val[:album]}"
+    if stats[:albums].keys.include? album_name
+      stats[:albums][album_name] += 1
+      stats[:albums_time][album_name] += val[:duration]
+    else
+      stats[:albums][album_name] = 1
+      stats[:albums_time][album_name] = val[:duration]
+    end
+    stats[:total_time] += val[:duration]
+    date = Time.parse key.to_s
+    stats[:days][WEEKDAYS[date.wday]] += 1
+    stats[:hours][date.hour.to_s.to_i] += 1
+  end
+  stats[:total_albums] = stats[:albums].keys.length
+  stats[:total_artists] = stats[:artists].keys.length
+  stats
+end
+
+def last_week_stats
+  if $config[:weekly_stats]
+    week_ago = (Date.today - 7).to_time
+    #delete all out of time period data before calculating the stats
+    weekly_stats = JSON.parse(File.read($config[:home_path] + "scrobble_stats_weekly.json"), {:symbolize_names=>true})
+    weekly_stats.delete_if { |x| Time.parse(x.keys[0].to_s) < week_ago } #using Time instead of Date because you can't compare Date for some reasons
+    File.write($config[:home_path] + "scrobble_stats_weekly.json", JSON.pretty_generate(weekly_stats))
+    period_stats(weekly_stats)
+  end
+end
+
+def this_month_stats
+  if $config[:monthly_stats]
+    today = Date.today
+    monthly_stats = JSON.parse(File.read($config[:home_path] + "scrobble_stats_monthly.json"), {:symbolize_names=>true})
+    monthly_stats.delete_if { |x| Date.parse(x.keys[0].to_s).month != today.month || Date.parse(x.keys[0].to_s).year != today.year}
+    File.write($config[:home_path] + "scrobble_stats_monthly.json", JSON.pretty_generate(monthly_stats))
+    period_stats(monthly_stats)
+  end
+end
+
+def this_year_stats
+  if $config[:yearly_stats]
+    today = Date.today
+    yearly_stats = JSON.parse(File.read($config[:home_path] + "scrobble_stats_yearly.json"), {:symbolize_names=>true})
+    yearly_stats.delete_if { |x| Date.parse(x.keys[0].to_s).year != today.year}
+    File.write($config[:home_path] + "scrobble_stats_yearly.json", JSON.pretty_generate(yearly_stats))
+    period_stats(yearly_stats)
+  end
+end
+
 def compute_stats(tracks)
   {
     "listening_time" => get_total_time(tracks),
@@ -140,7 +219,10 @@ def compute_stats(tracks)
     "albums_listens" => get_albums_listen(tracks),
     "albums_time" => get_albums_listen_time(tracks),
     "listening_hours" => listening_hours(File.read($config[:home_path] + "dates.txt"), File.read($config[:home_path] + "stats.json")),
-    "listening_days" => listening_days(File.read($config[:home_path] + "dates.txt"), File.read($config[:home_path] + "stats.json"))
+    "listening_days" => listening_days(File.read($config[:home_path] + "dates.txt"), File.read($config[:home_path] + "stats.json")),
+    "last_week" => last_week_stats,
+    "this_month" => this_month_stats,
+    "this_year" => this_year_stats
   }
 end
 

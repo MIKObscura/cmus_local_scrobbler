@@ -48,7 +48,7 @@ def parse_cmus_status(status)
   result_hash
 end
 
-#dumps the hash into the current session's json
+#dumps the hash into the current session's json and to the other stats files if specified
 def write_to_json(json)
   begin
     file = File.read($json_filename)
@@ -58,6 +58,36 @@ def write_to_json(json)
   json_array = JSON.parse(file)
   json_array << json
   File.write($json_filename, JSON.pretty_generate(json_array))
+  if $config[:weekly_stats]
+    begin
+      week_file = File.read($config[:home_path] + "scrobble_stats_weekly.json")
+    rescue Errno::ENOENT
+      week_file = File.open($config[:home_path] + "scrobble_stats_weekly.json", "w+").read
+    end
+    json_week = JSON.parse(week_file)
+    json_week << json
+    File.write($config[:home_path] + "scrobble_stats_weekly.json", JSON.pretty_generate(json_week))
+  end
+  if $config[:monthly_stats]
+    begin
+      month_file = File.read($config[:home_path] + "scrobble_stats_monthly.json")
+    rescue Errno::ENOENT
+      month_file = File.open($config[:home_path] + "scrobble_stats_monthly.json", "w+").read
+    end
+    json_month = JSON.parse(month_file)
+    json_month << json
+    File.write($config[:home_path] + "scrobble_stats_monthly.json", JSON.pretty_generate(json_month))
+  end
+  if $config[:yearly_stats]
+    begin
+      year_file = File.read($config[:home_path] + "scrobble_stats_yearly.json")
+    rescue Errno::ENOENT
+      year_file = File.open($config[:home_path] + "scrobble_stats_yearly.json", "w+").read
+    end
+    json_year = JSON.parse(year_file)
+    json_year << json
+    File.write($config[:home_path] + "scrobble_stats_yearly.json", JSON.pretty_generate(json_year))
+  end
 end
 
 def main
