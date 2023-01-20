@@ -39,7 +39,7 @@ time_to_register=0.5
 
 
 # How to run?
-Make a configuration file then simply execute this command
+Make a configuration file **(this is necessary as the different properties in it don't have default values!)** then simply execute this command
 > ruby path/to/file/main.rb
 
 # Known issues
