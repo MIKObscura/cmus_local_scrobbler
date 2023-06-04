@@ -56,4 +56,4 @@ build-iPhoneSimulator/
 # .rubocop-https?--*
 .idea/
 *.db
-*sqdbpro
+*.sqdbpro

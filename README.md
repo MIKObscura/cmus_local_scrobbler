@@ -41,7 +41,11 @@ log_level=none
 
 
 # How to run?
-Make a configuration file then simply execute this command
+Firstly, make a configuration file like explained above.
+Secondly, you'll need to initialize the database. For that, install SQLite3 and create a `scrobble.db` in the same directory as the home_path variable you use in the config file then execute the `db_init_script.sql` file in it. Like this for example:
+> cat path/to/db_init_script.sql | sqlite3 path/to/scrobble.db  
+
+Then execute this command while cmus is runningto start the program:
 > ruby path/to/file/main.rb
 
 # Known issues
