@@ -1,0 +1,23 @@
+CREATE TABLE "artists" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"name"	TEXT NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+CREATE TABLE "albums" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"title"	TEXT NOT NULL,
+	"artist"	INTEGER NOT NULL,
+	FOREIGN KEY("artist") REFERENCES "artists"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+CREATE TABLE "tracks" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"title"	TEXT NOT NULL,
+	"artist"	INTEGER NOT NULL,
+	"album"	INTEGER NOT NULL,
+	"plays"	INTEGER DEFAULT 0,
+	"duration"	INTEGER,
+	FOREIGN KEY("album") REFERENCES "albums"("id"),
+	FOREIGN KEY("artist") REFERENCES "artists"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);

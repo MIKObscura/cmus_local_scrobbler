@@ -14,6 +14,10 @@ def get_cmus_status
   status.each_line do |line| #turn it into an array to make reading it easier
     status_lines += [line]
   end
+  if $config[:log_level] == 'debug'
+    puts "========= Full status ========"
+    puts status_lines
+  end
   status_lines
 end
 
@@ -44,6 +48,10 @@ def parse_cmus_status(status)
     if s_elems[0] == "position"
       result_hash[today]["position"] = s_elems[1].to_i
     end
+  end
+  if $config[:log_level] == 'debug' or $config[:log_level] == 'info'
+    puts "======= Parsed status =========="
+    puts result_hash
   end
   result_hash
 end
@@ -98,7 +106,7 @@ def main
     $json_filename = $config[:home_path] + "scrobble_data_%d%d%d%d%d.json" % [today.day, today.month, today.year, today.hour, today.min]
   end
   clear_data($json_filename)
-  processes = `ps -a`
+  processes = `ps -A`
   previous_song = nil
   while processes.include? "cmus" #automatically ends when cmus isn't running
     status = get_cmus_status
@@ -122,7 +130,7 @@ def main
       write_to_json json_status
     end
     sleep(10) #wait 10s, no point in checking all the time
-    processes = `ps -a`
+    processes = `ps -A`
   end
   main_stats
 end

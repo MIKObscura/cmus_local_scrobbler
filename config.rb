@@ -2,7 +2,8 @@ include Errno
 $config = {
   :home_path => "",
   :keep_previous_sessions => false,
-  :time_to_register => 0.5
+  :time_to_register => 0.5,
+  :log_level => "none"
 }
 
 class String
