@@ -100,6 +100,11 @@ end
 
 def main
   read_config
+  if $config[:log_level] == "debug"
+    puts "======= Configuration ========="
+    puts $config
+    puts "==============================="
+  end
   today = Time.now
   $json_filename = $config[:home_path] + "scrobble_data.json"
   if $config[:keep_previous_sessions]

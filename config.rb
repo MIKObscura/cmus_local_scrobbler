@@ -22,7 +22,7 @@ def read_config
   conf.each do |c|
     var = c.split("=")[0]
     val = c.split("=")[1]
-    if var == "home_path"
+    if var == "home_path" or var == "log_level"
       $config[var.to_sym] = val
       next
     end
