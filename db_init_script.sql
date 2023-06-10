@@ -21,3 +21,24 @@ CREATE TABLE "tracks" (
 	FOREIGN KEY("artist") REFERENCES "artists"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+create trigger increment_if_exist
+before insert on tracks
+when exists (select * from tracks where artist = new.artist and album = new.album and title = new.title and duration = new.duration)
+begin
+	update tracks
+	set plays = plays + 1
+	where artist = new.artist and album = new.album and title = new.title and duration = new.duration;
+	select raise(ignore);
+end;
+create trigger create_album_if_not_exist
+before insert on albums
+when exists (select * from albums where title = new.title and artist = new.artist)
+begin
+	select raise(ignore);
+end;
+create trigger create_artist_if_not_exist
+before insert on artists
+when exists (select * from artists where name = new.name)
+begin
+	select raise(ignore);
+end;
