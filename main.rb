@@ -26,7 +26,8 @@ def parse_cmus_status(status)
   today = Time.now.strftime("%Y-%m-%d %H:%M:%S")
   result_hash = {
     today => {
-    "albumartist" => "", #all of the elements that we're interested in
+    "artist" => "", #all of the elements that we're interested in
+    "albumartist" => "", #in case it doesn't have an artist field but only this one instead
     "album" => "",
     "title" => "",
     "duration" => 0,
@@ -39,15 +40,16 @@ def parse_cmus_status(status)
     if keys.include? s_elems[1]
       result_hash[today][s_elems[1]] = s_elems[2..s_elems.length].join(" ")
     end
-    if s_elems[1] == "artist"
-      result_hash[today]["albumartist"] = s_elems[2..s_elems.length].join(" ")
-    end
     if s_elems[0] == "duration"
       result_hash[today]["duration"] = s_elems[1].to_i
     end
     if s_elems[0] == "position"
       result_hash[today]["position"] = s_elems[1].to_i
     end
+  end
+  if result_hash[today]["artist"] == "" or result_hash[today]["artist"].nil?
+    result_hash[today]["artist"] = result_hash[today]["albumartist"]
+    result_hash[today].delete("albumartist")
   end
   if $config[:log_level] == 'debug' or $config[:log_level] == 'info'
     puts "======= Parsed status =========="

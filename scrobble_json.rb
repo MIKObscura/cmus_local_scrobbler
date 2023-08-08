@@ -33,26 +33,6 @@ def get_dates(json)
   dates
 end
 
-#uses the previous function if there is a cache, if not uses given json
-def init_tracks(json, cache = false)
-  if cache
-    tracks = init_tracks_from_cache
-    return tracks
-  end
-  tracks = []
-  json.each do | j |
-    new_track = Track.new(j["title"], j["albumartist"], j["album"], j["duration"])
-    if tracks.any? { | t | t.name == new_track.name and t.artist == new_track.artist }
-      index = tracks.find_index { | t | t.name == new_track.name and t.artist == new_track.artist }
-      tracks[index].listens += 1
-      next
-    end
-    tracks += [new_track]
-  end
-  create_cache tracks
-  tracks
-end
-
 #clears the current session's json
 def clear_data(json_data)
   clear = "[]"
@@ -61,7 +41,7 @@ end
 
 #finds the index of an element in the json, returns nil if not found
 def json_find(json, el)
-  json.find_index { | e | e["artist"] == el["albumartist"] and e["title"] == el["title"] }
+  json.find_index { | e | e["artist"] == el["artist"] and e["title"] == el["title"] }
 end
 
 def main_stats
@@ -74,7 +54,7 @@ def main_stats
   dates_file.close
   parsed_json = unpack_json(JSON.parse(json_file, {:symbolize_names=>true}))
   parsed_json.each do |t|
-    if t[:artist].nil? # artist and albumartist are the same thing, not sure why they both exist
+    if t[:artist].nil? or t[:artist] == "" # artist and albumartist are the same thing, not sure why they both exist
       t[:artist] = t[:albumartist]
       t.delete(:albumartist)
     end
