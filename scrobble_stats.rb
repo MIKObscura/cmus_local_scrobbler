@@ -178,16 +178,20 @@ def period_stats(raw_data)
   raw_data.each do |v|
     key = v.keys[0]
     val = v[key]
+    artist = val[:albumartist]
+    if val.keys.include? :artist
+      artist = val[:artist]
+    end
     # increment the plays counter if the artist/album/track is already there
     # initialize it with 1 if not
-    if stats[:artists].keys.include? val[:artist]
-      stats[:artists][val[:artist]] += 1
-      stats[:artists_time][val[:artist]] += val[:duration]
+    if stats[:artists].keys.include? artist
+      stats[:artists][artist] += 1
+      stats[:artists_time][artist] += val[:duration]
     else
-      stats[:artists][val[:artist]] = 1
-      stats[:artists_time][val[:artist]] = val[:duration]
+      stats[:artists][artist] = 1
+      stats[:artists_time][artist] = val[:duration]
     end
-    album_name = "#{val[:artist]} - #{val[:album]}"
+    album_name = "#{artist} - #{val[:album]}"
     if stats[:albums].keys.include? album_name
       stats[:albums][album_name] += 1
       stats[:albums_time][album_name] += val[:duration]
